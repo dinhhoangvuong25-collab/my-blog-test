@@ -43,7 +43,7 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.organization=hoangvuong990
+            -Dsonar.organization=zitests
             -Dsonar.projectKey=Hoangvuong990_devsecops-demo
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
