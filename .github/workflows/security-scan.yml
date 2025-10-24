@@ -6,60 +6,76 @@ on:
   pull_request:
 
 jobs:
+  # 1️⃣ BUILD JOB
   build:
-    runs-on: ubuntu-latest
+    Hoangviong
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          python-version: '3.10'
 
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            echo "No requirements.txt found, skipping install."
+          fi
+
+  # 2️⃣ SAST - Static Analysis (SonarCloud)
   sast:
-    runs-on: ubuntu-latest
+    Hoangvuong
     needs: build
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Ensure sonar-project.properties
         run: |
           if [ ! -f sonar-project.properties ]; then
-            echo "# SonarCloud project config - update values if needed" > sonar-project.properties
-            echo "sonar.organization=hoangvuong990" >> sonar-project.properties
+            echo "# SonarCloud project config" > sonar-project.properties
+            echo "sonar.organization=zitests" >> sonar-project.properties
             echo "sonar.projectKey=Hoangvuong990_devsecops-demo" >> sonar-project.properties
             echo "sonar.projectName=DevSecOps Demo" >> sonar-project.properties
             echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
             echo "sonar.sources=." >> sonar-project.properties
-            echo "Created sonar-project.properties"
-          else
-            echo "sonar-project.properties already exists"
           fi
 
       - name: Run SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.organization=zitests
+            -Dsonar.organization=hoangvuong990
             -Dsonar.projectKey=Hoangvuong990_devsecops-demo
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
+  # 3️⃣ SCA - Dependency Scan (Snyk)
   sca:
-   needs: sast
+    runs-on: ubuntu-latest
+    needs: sast
     steps:
       - uses: actions/checkout@v4
-      - name: Run Snyk Scan (Node.js)
-        uses: snyk/actions/node@master
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run Snyk Scan (Python)
+        uses: snyk/actions/python@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           command: test
-          args: --all-projects
 
+  # 4️⃣ Container/Image Scan - Trivy
   container_scan:
     runs-on: ubuntu-latest
     needs: sca
@@ -75,12 +91,12 @@ jobs:
           format: 'table'
           output: 'trivy-report.txt'
 
+  # 5️⃣ Upload scan reports
   upload_report:
     runs-on: ubuntu-latest
     needs: [container_scan]
     steps:
-      - name: Checkout (for artifact paths)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Upload Trivy report
         uses: actions/upload-artifact@v4
@@ -88,7 +104,7 @@ jobs:
           name: trivy-report
           path: trivy-report.txt
 
-      - name: Upload Sonar scanner work (optional)
+      - name: Upload Sonar scanner results
         if: always()
         uses: actions/upload-artifact@v4
         with:
