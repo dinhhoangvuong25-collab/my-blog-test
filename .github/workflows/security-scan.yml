@@ -25,8 +25,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      # Optional: create sonar-project.properties if not present in repo
-            - name: Ensure sonar-project.properties
+      - name: Ensure sonar-project.properties
         run: |
           if [ ! -f sonar-project.properties ]; then
             echo "# SonarCloud project config - update values if needed" > sonar-project.properties
@@ -41,17 +40,14 @@ jobs:
           fi
 
       - name: Run SonarCloud Scan
-        # You can replace @v2 with the full commit SHA of the action for supply-chain safety.
         uses: SonarSource/sonarcloud-github-action@v2
         with:
-          # keep args minimal because we have sonar-project.properties
           args: >
             -Dsonar.organization=hoangvuong990
             -Dsonar.projectKey=Hoangvuong990_devsecops-demo
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          # Optional: uncomment to enable verbose debug logs
-          # SONAR_SCANNER_OPTS: "-X"
+
 
   sca:
     runs-on: ubuntu-latest
