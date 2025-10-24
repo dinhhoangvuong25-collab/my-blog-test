@@ -49,20 +49,18 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 
-  sca:
-    runs-on: ubuntu-latest
-    needs: sast
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-
-      - name: Run Snyk Test
-        # For production replace @master with the action's pinned commit SHA
-        uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-        with:
-          command: test
+sca:
+  runs-on: ubuntu-latest
+  needs: sast
+  steps:
+    - uses: actions/checkout@v4
+    - name: Run Snyk Scan (Node.js)
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        command: test
+        args: --all-projects
 
   container_scan:
     runs-on: ubuntu-latest
