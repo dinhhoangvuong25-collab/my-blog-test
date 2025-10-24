@@ -43,24 +43,23 @@ jobs:
         uses: SonarSource/sonarcloud-github-action@v2
         with:
           args: >
-            -Dsonar.organization=zitests
+            -Dsonar.organization=hoangvuong990
             -Dsonar.projectKey=Hoangvuong990_devsecops-demo
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-
-sca:
-  runs-on: ubuntu-latest
-  needs: sast
-  steps:
-    - uses: actions/checkout@v4
-    - name: Run Snyk Scan (Node.js)
-      uses: snyk/actions/node@master
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        command: test
-        args: --all-projects
+  sca:
+    runs-on: ubuntu-latest
+    needs: sast
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Snyk Scan (Node.js)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          command: test
+          args: --all-projects
 
   container_scan:
     runs-on: ubuntu-latest
@@ -70,7 +69,6 @@ sca:
         uses: actions/checkout@v4
 
       - name: Run Trivy on project
-        # For production replace @master with the action's pinned commit SHA
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
