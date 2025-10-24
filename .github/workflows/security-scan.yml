@@ -37,7 +37,7 @@ jobs:
         run: |
           if [ ! -f sonar-project.properties ]; then
             echo "# SonarCloud project config" > sonar-project.properties
-            echo "sonar.organization=hoangvuong990" >> sonar-project.properties
+            echo "sonar.organization=zitests" >> sonar-project.properties
             echo "sonar.projectKey=Hoangvuong990_devsecops-demo" >> sonar-project.properties
             echo "sonar.projectName=DevSecOps Demo" >> sonar-project.properties
             echo "sonar.sourceEncoding=UTF-8" >> sonar-project.properties
