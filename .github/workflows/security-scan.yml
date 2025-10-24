@@ -12,7 +12,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
@@ -22,22 +22,48 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      # Optional: create sonar-project.properties if not present in repo
+      - name: Ensure sonar-project.properties
+        run: |
+          if [ ! -f sonar-project.properties ]; then
+            cat > sonar-project.properties <<'EOF'
+# SonarCloud project config - update values if needed
+sonar.organization=hoangvuong990
+sonar.projectKey=Hoangvuong990_devsecops-demo
+sonar.projectName=DevSecOps Demo
+sonar.sourceEncoding=UTF-8
+sonar.sources=.
+EOF
+            echo "Created sonar-project.properties"
+          else
+            echo "sonar-project.properties already exists"
+          fi
+
       - name: Run SonarCloud Scan
+        # You can replace @v2 with the full commit SHA of the action for supply-chain safety.
         uses: SonarSource/sonarcloud-github-action@v2
         with:
+          # keep args minimal because we have sonar-project.properties
           args: >
-            -Dsonar.projectKey=my_project_key
-            -Dsonar.organization=my_org
+            -Dsonar.organization=hoangvuong990
+            -Dsonar.projectKey=Hoangvuong990_devsecops-demo
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          # Optional: uncomment to enable verbose debug logs
+          # SONAR_SCANNER_OPTS: "-X"
 
   sca:
     runs-on: ubuntu-latest
     needs: sast
     steps:
-      - uses: actions/checkout@v4
-      - name: Run Snyk Scan
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Run Snyk Test
+        # For production replace @master with the action's pinned commit SHA
         uses: snyk/actions/node@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
@@ -48,7 +74,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: sca
     steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
       - name: Run Trivy on project
+        # For production replace @master with the action's pinned commit SHA
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: fs
@@ -60,7 +90,18 @@ jobs:
     runs-on: ubuntu-latest
     needs: [container_scan]
     steps:
-      - uses: actions/upload-artifact@v4
+      - name: Checkout (for artifact paths)
+        uses: actions/checkout@v4
+
+      - name: Upload Trivy report
+        uses: actions/upload-artifact@v4
         with:
-          name: security-reports
+          name: trivy-report
           path: trivy-report.txt
+
+      - name: Upload Sonar scanner work (optional)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sonar-scanner-work
+          path: .scannerwork
