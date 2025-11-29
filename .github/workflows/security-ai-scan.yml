@@ -1,9 +1,0 @@
-name: 'Security AI Scanner'
-description: 'AI-powered security scanning using Snyk and Gemini'
-author: 'Hoang Vuong'
-branding:
-  icon: 'shield'
-  color: 'blue'
-runs:
-  using: 'docker'
-  image: 'docker://hoangvuong99/security-scan:latest'
