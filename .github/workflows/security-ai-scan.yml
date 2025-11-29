@@ -1,0 +1,29 @@
+name: Security AI Scan
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Scan Mode'
+        required: false
+        default: 'all'
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Security AI Scanner
+        uses: Hoangvuong990/Security-scan-code@main
+        with:
+          snyk_token: ${{ secrets.SNYK_TOKEN }}
+          google_api_key: ${{ secrets.GOOGLE_API_KEY }}
+          security_license_key: ${{ secrets.SECURITY_LICENSE_KEY }}
+          
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: ai_security_report
+          path: |
+            ai_security_report.md
+            vscode-scan-result.json
