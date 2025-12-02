@@ -1,0 +1,55 @@
+name: Security AI Scan
+
+on:
+  workflow_dispatch:
+    inputs:
+      scan_mode:
+        description: 'Scan mode (all, folders, snippet)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - folders
+          - snippet
+      scan_folders:
+        description: 'Folders to scan (comma-separated)'
+        required: false
+        default: ''
+      scan_code:
+        description: 'Code snippet to scan'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Security AI Scanner
+        uses: Hoangvuong990/Security-scan-code@main
+        with:
+          mode: ${{ github.event.inputs.scan_mode || 'all' }}
+          folders: ${{ github.event.inputs.scan_folders || '' }}
+          code: ${{ github.event.inputs.scan_code || '' }}
+        env:
+          SNYK_TOKEN: ${{ secrets.SECURITY_AI_SNYK_TOKEN }}
+          GOOGLE_API_KEY: ${{ secrets.SECURITY_AI_GOOGLE_API_KEY }}
+
+      - name: Upload Scan Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: |
+            vscode-scan-result.json
+            ai_security_report.md
+            snyk_*.json
+            snyk_filtered.json
+          retention-days: 7
